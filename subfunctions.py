@@ -2,7 +2,7 @@
 import math
 import numpy as np
 import scipy.interpolate as inte
-from scipy import integrate
+from scipy.integrate import simps
 from define_experiment import *
 
 def define_rover_1():   # or define_rover()
@@ -424,8 +424,14 @@ def battenergy(t,v,rover):
     
     effcy_fun = inte.interp1d(effcy_tau,effcy,kind='cubic')
     eff = effcy_fun(tau)
-    P_batt = 6*P/eff
-    E = integrate.trapezoid(P_batt,t)
+    
+    P_batt = np.zeros(len(eff))
+    for i in range(len(eff)):
+        if eff[i] == 0:
+            P_batt[i] = 0
+        else:
+            P_batt = 6*P/eff
+    E = simps(P_batt,t)
     
     return E
 
@@ -485,7 +491,7 @@ def end_of_mission_event(end_event):
 
 rover,planet = define_rover_1()
 experiment,end_event = experiment1()
-v=np.linspace(.1,.5,6)
+v=np.linspace(.1,.3,6)
 t=np.linspace(0,1,6)
 #print(motorW(v,rover))
 #print(mechpower(v,rover))
