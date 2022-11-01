@@ -379,9 +379,10 @@ def rover_dynamics(t,y,rover,planet,experiment):
        
     alpha_deg = experiment['alpha_deg']
     alpha_fun = inte.interp1d(alpha_dist,alpha_deg,kind='cubic',fill_value='extrapolate')
+    Crr = experiment['Crr']
     terrain_angle = alpha_fun(y[1])
     w = motorW(y[0]) 
-    F = Fnet(w,terrain_angle,rover,planet,Crr=0)
+    F = Fnet(w,terrain_angle,rover,planet,Crr)
     mass = get_mass(rover)
         
     dydt=np.array([F/mass,y[0]])
@@ -424,7 +425,7 @@ def battenergy(t,v,rover):
     effcy_fun = inte.interp1d(effcy_tau,effcy,kind='cubic')
     eff = effcy_fun(tau)
     P_batt = 6*P/eff
-    E = integrate.simpson(P_batt,t)
+    E = integrate.trapezoid(P_batt,t)
     
     return E
 
