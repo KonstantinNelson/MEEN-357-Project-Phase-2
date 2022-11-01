@@ -2,7 +2,7 @@
 import math
 import numpy as np
 import scipy.interpolate as inte
-from scipy.integrate import simps
+from scipy.integrate import simps, solve_ivp
 from define_experiment import *
 
 def define_rover_1():   # or define_rover()
@@ -302,7 +302,7 @@ def F_net(omega, terrain_angle, rover, planet, Crr):
     elif len(np.shape(omega)) != 1:
         raise Exception('First input must be a scalar or a vector. Matrices are not allowed.')
         
-    # Check that the second input is a scalar or a vector
+     #Check that the second input is a scalar or a vector
     if (type(terrain_angle) != int) and (type(terrain_angle) != float) and (not isinstance(terrain_angle, np.ndarray)):
         raise Exception('Second input must be a scalar or a vector. If input is a vector, it should be defined as a numpy array.')
     elif not isinstance(terrain_angle, np.ndarray):
@@ -349,7 +349,7 @@ def motorW(v,rover):
     if type(rover) != dict:
         raise Exception('Second input must be a dict')
         
-    if (type(v == int) or type(v ==  float)):
+    if (type(v) == int or type(v) ==  float):
         print()
         
     Ng = get_gear_ratio(rover['wheel_assembly']['speed_reducer'])
@@ -362,27 +362,28 @@ def motorW(v,rover):
 
 
 def rover_dynamics(t,y,rover,planet,experiment):
-    if (type(t != int) or type (t != float)):
+    if (type(t) != int or type(t) != float):
         raise Exception('The first input must be a scalar.')
         
     if not isinstance(y, np.ndarray):
         raise Exception('The second input must be a numpy array.')
         
-    if type(rover != dict):
+    if type(rover) != dict:
         raise Exception('The third input must be a dict.')
         
-    if type(planet != dict):
+    if type(planet) != dict:
         raise Exception('The fourth input must be a dict.')
     
-    if type(experiment != dict):
+    if type(experiment) != dict:
         raise Exception('The fifth input must be a dict.')
        
     alpha_deg = experiment['alpha_deg']
+    alpha_dist = experiment['alpha_dist']
     alpha_fun = inte.interp1d(alpha_dist,alpha_deg,kind='cubic',fill_value='extrapolate')
     Crr = experiment['Crr']
     terrain_angle = alpha_fun(y[1])
-    w = motorW(y[0]) 
-    F = Fnet(w,terrain_angle,rover,planet,Crr)
+    w = motorW(y[0],rover) 
+    F = F_net(w,terrain_angle,rover,planet,Crr)
     mass = get_mass(rover)
         
     dydt=np.array([F/mass,y[0]])
@@ -437,21 +438,31 @@ def battenergy(t,v,rover):
 
 
 def simulate_rover(rover,planet,experiment,end_event):
-    if type(rover != dict):
-        raise Exception('The fifth input must be a dict.')
+    if type(rover) != dict:
+        raise Exception('The first input must be a dict.')
     
-    if type(planet != dict):
-        raise Exception('The fifth input must be a dict.')
+    if type(planet) != dict:
+        raise Exception('The second input must be a dict.')
     
-    if type(experiment != dict):
+    if type(experiment) != dict:
         raise Exception('The third input must be a dict.')
         
-    if type(end_event != dict):
+    if type(end_event) != dict:
         raise Exception('The fourth input must be a dict.')
     
-
+    alpha_dist = experiment['alpha_dist']
+    alpha_deg = experiment['alpha_deg']
+    y0 = experiment['initial_conditions']
+    tspan = experiment['time_range']
     
-    return rover
+    fun=lambda t,y: rover_dynamics(t,y,rover,planet,experiment)
+    sol=solve_ivp(fun,tspan,y0,method='RK45')
+    
+    T=sol.t
+    Y0=sol.y[0,:]
+    Y1=sol.y[1,:]
+    
+    return rover, T, Y0, Y1
 
 
 def end_of_mission_event(end_event):
@@ -497,4 +508,19 @@ t=np.linspace(0,1,6)
 #print(mechpower(v,rover))
 
 #print(tau_dcmotor(motorW(v,rover),rover['wheel_assembly']['motor']))
-#print(battenergy(t,v,rover))        
+#print(battenergy(t,v,rover))
+
+
+rover, T, Y0, Y1 = simulate_rover(rover,planet,experiment,end_event)
+
+fig,ax=plt.subplots(2)
+#fig.subplot_adjust(hspace=1)
+
+ax[0].set_title('Position of Spinr-Mass-Damper System')
+ax[0].plot(T,Y0)
+ax[0].set_ylabel('Time (s)')
+ax[0].set_ylabel('Position (m)')
+
+ax[1].plot(T,Y1)
+
+plt.show()        
