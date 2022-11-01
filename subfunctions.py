@@ -497,4 +497,4 @@ t=np.linspace(0,1,6)
 #print(mechpower(v,rover))
 
 #print(tau_dcmotor(motorW(v,rover),rover['wheel_assembly']['motor']))
-print(battenergy(t,v,rover))        
+#print(battenergy(t,v,rover))        
