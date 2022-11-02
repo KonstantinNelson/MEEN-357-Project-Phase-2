@@ -1,8 +1,10 @@
 import scipy.interpolate as inte
 import numpy as np
 import matplotlib.pyplot as plt
-from rover_dict import *
+from subfunctions import *
 
+#retrieve the the rover and planet dict from the define_rover_1 function in subfunctions
+rover,planet = define_rover_1()
 #get the effcy array from the rover dictionary
 effcy = rover['wheel_assembly']['motor']['effcy']
 #get the effcy_tau array from teh rover dict
