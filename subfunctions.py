@@ -344,124 +344,181 @@ def F_net(omega, terrain_angle, rover, planet, Crr):
 
 
 def motorW(v,rover):
+    
+    #check that the first input is a scalar or a numpy array
     if (type(v) != int) and (type(v) != float) and (not isinstance(v, np.ndarray)):
         raise Exception('The first input must be a scalar or a vector. If input is a vector, it should be defined as a numpy array.')
         
+    #check if the second input is a dict    
     if type(rover) != dict:
         raise Exception('Second input must be a dict')
         
+    #retrieve gear ratio from get_gear_ratio function    
     Ng = get_gear_ratio(rover['wheel_assembly']['speed_reducer'])
+    #get wheel radius from rover dict
     r = rover['wheel_assembly']['wheel']['radius']
-    
+    #calculate the rotational velocity of the wheel using the translational velocity and the wheel's radius
     w_out = v/r
+    #calculate the rotational velocity of the motor shaft using w_out and the gear ratio
     w = w_out*Ng    
         
     return w
 
 
 def rover_dynamics(t,y,rover,planet,experiment):
+    
+    #check if the first input is a scalar 
     if (type(t) != int) and (type(t) != float) and (type(t)!=np.float64):
         raise Exception('The first input must be a scalar.')
         
+    #check if the second input is a numpy array    
     if not isinstance(y, np.ndarray):
         raise Exception('The second input must be a numpy array.')
-        
+    
+    #check if the third input is a dict
     if type(rover) != dict:
         raise Exception('The third input must be a dict.')
         
+    #check if the fourth input is a dict    
     if type(planet) != dict:
         raise Exception('The fourth input must be a dict.')
     
+    #check if the fifth input is a dict
     if type(experiment) != dict:
         raise Exception('The fifth input must be a dict.')
        
+    #retrieve the array of degree values from the experiment dict
     alpha_deg = experiment['alpha_deg']
+    #get the array of distance values from the experiment dict
     alpha_dist = experiment['alpha_dist']
+    #define a function alpha_fun that interpolates the data from alpha_deg and alpha_dist
     alpha_fun = inte.interp1d(alpha_dist,alpha_deg,kind='cubic',fill_value='extrapolate')
+    #retrieve the coefficient of rolling resistance from the experiment dict
     Crr = experiment['Crr']
+    #approximate the terrain angle using the interpolation function and a value of position
     terrain_angle = alpha_fun(y[1])
+    #calculate the corresponding omega value using the motorW function and a value of velocity
     w = motorW(float(y[0]),rover) 
+    #calculate the net force on the rover using the F_net function with the omega and terrain angle values
     F = F_net(w,float(terrain_angle),rover,planet,Crr)
+    #retrieve the mass of the rover
     mass = get_mass(rover)
         
     dydt=np.array([float(F/mass),y[0]])
     return dydt
 
 def mechpower(v,rover):
+    
+    #check if the first input is a scalar or a numpy array
     if (type(v) != int) and (type(v) != float) and (not isinstance(v, np.ndarray)):
         raise Exception('The first input must be a scalar or a vector. If input is a vector, it should be defined as a numpy array.')
-        
+    
+    #check if the second input is a dict
     if type(rover) != dict:
         raise Exception('Second input must be a dict')
     
+    #calculate the value(s) of motor shaft speed using the motorW function
     w = motorW(v,rover)
+    #calculate the value(s) of tau using the tau_dcmotor function
     tau = tau_dcmotor(w,rover['wheel_assembly']['motor'])
     
+    #calculate power using the corresponding tau and omega values
     P = tau*w    
     
     return P
     
     
 def battenergy(t,v,rover):
+    
+    #check if the first input is a numpy array
     if not isinstance(t, np.ndarray):
         raise Exception('The first input should be defined as a numpy array.')
-       
+    
+    #check if the second input is a numpy array
     if not isinstance(v, np.ndarray):
         raise Exception('The second input should be defined as a numpy array.')    
     
+    #test if the length of the first and second input are the same
     if len(t) != len(v):
         raise Exception('The first and second input must have the same length.')
-        
+    
+    #check if the third input is a dict
     if type(rover) != dict:
         raise Exception('Third input must be a dict')
     
+    #calculate the mechanical power using the mechpower function and the second input
     P = mechpower(v,rover)
+    #calculate the motor shaft speed using the motorW function
     w = motorW(v,rover)
-    tau = tau_dcmotor(w,rover['wheel_assembly']['motor'])    
+    #calculate the torque using the tau_dcmotor function
+    tau = tau_dcmotor(w,rover['wheel_assembly']['motor'])   
+    #get the array of torque values from the rover dict
     effcy_tau = rover['wheel_assembly']['motor']['effcy_tau']
+    #get the array of efficiency values from the rover dict
     effcy = rover['wheel_assembly']['motor']['effcy']
     
+    #define a function effcy_fun that interpolates the values of effcy_tau and effcy
     effcy_fun = inte.interp1d(effcy_tau,effcy,kind='cubic')
+    #interpolate a value for efficiency using the interpolation function and a value for tau
     eff = effcy_fun(tau)
     
+    #intialize an array of zeroes
     P_batt = np.zeros(len(eff))
     for i in range(len(eff)):
+        #if the efficiency value is 0, the resulting P_batt value is NaN
         if eff[i] == 0:
             P_batt[i] = 0
         else:
+            #calculate the value of P_batt using the mechanical power of 6 wheels and the motor efficiency
             P_batt = 6*P/eff
+    #integrate the array of power values to get the value of electrical energy
     E = simps(P_batt,t)
     
     return E
 
 
 def simulate_rover(rover,planet,experiment,end_event):
+    
+    #check if the first input is a dict
     if type(rover) != dict:
         raise Exception('The first input must be a dict.')
     
+    #check if the second input is a dict
     if type(planet) != dict:
         raise Exception('The second input must be a dict.')
     
+    #check if the third input is a dict
     if type(experiment) != dict:
         raise Exception('The third input must be a dict.')
-        
+      
+    #check if the fourth input is a dict
     if type(end_event) != dict:
         raise Exception('The fourth input must be a dict.')
     
+    #get the array of distance values from the experiment dict
     alpha_dist = experiment['alpha_dist']
+    #get the array of degree values from the experiment dict
     alpha_deg = experiment['alpha_deg']
+    #get the initial conditions from the experiment dict
     y0 = experiment['initial_conditions']
+    #get the time span from the experiment dict
     tspan = experiment['time_range']
+    #call the end_of_mission_event function and get the events that will terminate the ode solver
     events = end_of_mission_event(end_event)
     
-    
+    #define the rover_dynamics function as a function of t and y
     fun=lambda t,y: rover_dynamics(float(t),y,rover,planet,experiment)
+    #use the rk45 ode solver method to solve the rover dynamics function for time, position, and velocity
     sol=solve_ivp(fun,tspan,y0,method='RK45',events=events)
     
+    #store the values of time in T
     T=sol.t
+    #store the values of velocity in Y0
     Y0=sol.y[0,:]
+    #store the values of position in Y1
     Y1=sol.y[1,:]
     
+    #update the rover dictionary with new values about the rover's perfomance over the given experiment conditions
     rover['telemetry']={
             'Time': T,
             'completion_time': T[-1],
