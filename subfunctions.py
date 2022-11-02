@@ -389,6 +389,10 @@ def rover_dynamics(t,y,rover,planet,experiment):
     #check if the second input is a numpy array    
     if not isinstance(y, np.ndarray):
         raise Exception('The second input must be a numpy array.')
+        
+    #check if the second input has a length of 2    
+    if len(y) != 2;
+        raise Exception('The second input must be a numpy array of length 2.')
     
     #check if the third input is a dict
     if type(rover) != dict:
