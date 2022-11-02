@@ -344,7 +344,12 @@ def F_net(omega, terrain_angle, rover, planet, Crr):
 
 
 def motorW(v,rover):
+    '''
+    Inputs:    v: list   Rover translational velocity (m/s)
+           rover: dict   Data structure specifying rover parameters
     
+    Output:    w: list   Motor speed (rad/s)
+    '''
     #check that the first input is a scalar or a numpy array
     if (type(v) != int) and (type(v) != float) and (not isinstance(v, np.ndarray)):
         raise Exception('The first input must be a scalar or a vector. If input is a vector, it should be defined as a numpy array.')
@@ -366,7 +371,17 @@ def motorW(v,rover):
 
 
 def rover_dynamics(t,y,rover,planet,experiment):
+    '''
+    Inputs:      t:  scalar   Time sample (s)
+                 y:  list     State vector of the rover, first element is velocity (m/s),
+                              second element is position (m)
+             rover:  dict     Data structure specifying rover parameters
+            planet:  dict     Data dictionary specifying planetary parameters
+        experiment:  dict     Data dictionary specifying parameters about the experiment
     
+    Output:   dydt:  list     Derivative of state vector. First element is accel (m/s^2),
+                              second element is velocity (m/s)
+    '''
     #check if the first input is a scalar 
     if (type(t) != int) and (type(t) != float) and (type(t)!=np.float64):
         raise Exception('The first input must be a scalar.')
@@ -408,7 +423,13 @@ def rover_dynamics(t,y,rover,planet,experiment):
     return dydt
 
 def mechpower(v,rover):
-    
+    '''
+    Inputs:     v:  list   Rover velocity data 
+            rover:  dict   Data structure specifying rover parameters
+
+    Output:     P:  list   Instantaneous power output of a single motor 
+                           corresponding to each element in v [W]
+    '''
     #check if the first input is a scalar or a numpy array
     if (type(v) != int) and (type(v) != float) and (not isinstance(v, np.ndarray)):
         raise Exception('The first input must be a scalar or a vector. If input is a vector, it should be defined as a numpy array.')
@@ -429,7 +450,13 @@ def mechpower(v,rover):
     
     
 def battenergy(t,v,rover):
-    
+    """
+    Inputs:         t:  list     Time samples from a rover simulation (s)
+                    v:  list     Rover velocity data corresponding to the time samples (m/s)
+                rover:  dict     Data structure specifying rover parameters
+
+    Outputs:        E:  scalar   Total energy consumed over time range (J)
+    """   
     #check if the first input is a numpy array
     if not isinstance(t, np.ndarray):
         raise Exception('The first input should be defined as a numpy array.')
@@ -478,7 +505,14 @@ def battenergy(t,v,rover):
 
 
 def simulate_rover(rover,planet,experiment,end_event):
-    
+     '''
+    Inputs:    rover:  dict   Data structure specifying rover parameters
+              planet:  dict   Data dictionary specifying planetary parameters
+          experiment:  dict   Data dictionary specifying parameters about the experiment
+           end_event:  dict   Data dictionary specifying end conditions of the experiment
+         
+    Output:   rover:  dict   Data structure specifying rover parameters
+    '''
     #check if the first input is a dict
     if type(rover) != dict:
         raise Exception('The first input must be a dict.')
