@@ -25,5 +25,3 @@ def experiment1():
                  'min_velocity' : 0.01}
     
     return experiment, end_event
-
-
