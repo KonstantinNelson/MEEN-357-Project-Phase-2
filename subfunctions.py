@@ -431,7 +431,6 @@ def mechpower(v,rover):
     '''
     Inputs:     v:  list   Rover velocity data 
             rover:  dict   Data structure specifying rover parameters
-
     Output:     P:  list   Instantaneous power output of a single motor 
                            corresponding to each element in v [W]
     '''
@@ -459,7 +458,6 @@ def battenergy(t,v,rover):
     Inputs:         t:  list     Time samples from a rover simulation (s)
                     v:  list     Rover velocity data corresponding to the time samples (m/s)
                 rover:  dict     Data structure specifying rover parameters
-
     Outputs:        E:  scalar   Total energy consumed over time range (J)
     """   
     #check if the first input is a numpy array
@@ -606,4 +604,3 @@ def end_of_mission_event(end_event):
     events = [distance_left, time_left, velocity_threshold]
     
     return events
-       
