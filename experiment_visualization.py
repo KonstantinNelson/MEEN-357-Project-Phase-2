@@ -26,4 +26,3 @@ plt.ylabel('Terrain Angle (deg)')
 plt.title('Terrain Angle vs. Position of Rover')
 plt.savefig('terrain_angle_vs_position.png',format='png')
 plt.show()
-
