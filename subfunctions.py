@@ -350,9 +350,6 @@ def motorW(v,rover):
     if type(rover) != dict:
         raise Exception('Second input must be a dict')
         
-    if (type(v) == int or type(v) ==  float):
-        print()
-        
     Ng = get_gear_ratio(rover['wheel_assembly']['speed_reducer'])
     r = rover['wheel_assembly']['wheel']['radius']
     
@@ -406,10 +403,10 @@ def mechpower(v,rover):
     
     
 def battenergy(t,v,rover):
-    if not isinstance(v, np.ndarray):
+    if not isinstance(t, np.ndarray):
         raise Exception('The first input should be defined as a numpy array.')
        
-    if not isinstance(t, np.ndarray):
+    if not isinstance(v, np.ndarray):
         raise Exception('The second input should be defined as a numpy array.')    
     
     if len(t) != len(v):
@@ -465,8 +462,19 @@ def simulate_rover(rover,planet,experiment,end_event):
     Y0=sol.y[0,:]
     Y1=sol.y[1,:]
     
-    return rover, T, Y0, Y1
-
+    rover['telemetry']={
+            'Time': T,
+            'completion_time': T[-1],
+            'velocity': Y0,
+            'position': Y1,
+            'distance_traveled': Y1[-1],
+            'max_velocity': max(Y0),
+            'average_velocity': sum(Y0)/len(Y0),
+            'power': mechpower(Y0,rover),
+            'batteryenergy': battenergy(T,Y0,rover),
+            'energy_per_distance': battenergy(T,Y0,rover)/Y1[-1]}
+    
+    return rover
 
 def end_of_mission_event(end_event):
     """
@@ -502,29 +510,4 @@ def end_of_mission_event(end_event):
     events = [distance_left, time_left, velocity_threshold]
     
     return events
-
-rover,planet = define_rover_1()
-experiment,end_event = experiment1()
-v=np.linspace(.1,.3,6)
-#t=np.linspace(0,1,6)
-print(motorW(.3,rover))
-#print(mechpower(v,rover))
-y=np.array([0.25,500])
-print(rover_dynamics(20,y,rover,planet,experiment))
-#print(tau_dcmotor(motorW(v,rover),rover['wheel_assembly']['motor']))
-#print(battenergy(t,v,rover))
-
-
-rover, T, Y0, Y1 = simulate_rover(rover,planet,experiment,end_event)
-
-fig,ax=plt.subplots(2)
-#fig.subplot_adjust(hspace=1)
-
-
-ax[0].plot(T,Y0)
-ax[0].set_ylabel('Time (s)')
-ax[0].set_ylabel('')
-
-ax[1].plot(T,Y1)
-
-plt.show()        
+       
