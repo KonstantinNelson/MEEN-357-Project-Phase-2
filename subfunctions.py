@@ -391,7 +391,7 @@ def rover_dynamics(t,y,rover,planet,experiment):
         raise Exception('The second input must be a numpy array.')
         
     #check if the second input has a length of 2    
-    if len(y) != 2;
+    if len(y) != 2
         raise Exception('The second input must be a numpy array of length 2.')
     
     #check if the third input is a dict
