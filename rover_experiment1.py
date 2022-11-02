@@ -6,14 +6,18 @@ from define_experiment import *
 import matplotlib.pyplot as plt
 from subfunctions import *
 
-#redefine the max distance termination_value 
+#import the experiment and end_event dictionaries from the experiment1 function in define_experiment
+experiment,end_event = experiment1()
+#import the rover and planet dictionaries from the define_rover_1 function in subfunctions
+rover,planet = define_rover_1()
+#redefine the max_distance termination condition
 end_event['max_distance']=1000
-#redefine the max time termination_value
+#redefine the max_time termination condition
 end_event['max_time']=10000
-#redefine the min_velocity termination value
-end_event['min_velocity']=0.1
+#redefine the min_velocity termination condition
+end_event['min_velocity']=0.01
 
-#update the rover dictionary to include the new telemetry information
+#update the rover dict with telemetry information
 rover = simulate_rover(rover,planet,experiment,end_event)
 
 #store the data in the telemetry dictionary in te
