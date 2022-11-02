@@ -4,6 +4,7 @@ import numpy as np
 import scipy.interpolate as inte
 from scipy.integrate import simps, solve_ivp
 from define_experiment import *
+import matplotlib.pyplot as plt
 
 def define_rover_1():   # or define_rover()
     # Initialize Rover dict for testing
@@ -362,7 +363,7 @@ def motorW(v,rover):
 
 
 def rover_dynamics(t,y,rover,planet,experiment):
-    if (type(t) != int or type(t) != float):
+    if (type(t) != int) and (type(t) != float) and (type(t)!=np.float64):
         raise Exception('The first input must be a scalar.')
         
     if not isinstance(y, np.ndarray):
@@ -382,11 +383,11 @@ def rover_dynamics(t,y,rover,planet,experiment):
     alpha_fun = inte.interp1d(alpha_dist,alpha_deg,kind='cubic',fill_value='extrapolate')
     Crr = experiment['Crr']
     terrain_angle = alpha_fun(y[1])
-    w = motorW(y[0],rover) 
-    F = F_net(w,terrain_angle,rover,planet,Crr)
+    w = motorW(float(y[0]),rover) 
+    F = F_net(w,float(terrain_angle),rover,planet,Crr)
     mass = get_mass(rover)
         
-    dydt=np.array([F/mass,y[0]])
+    dydt=np.array([float(F/mass),y[0]])
     return dydt
 
 def mechpower(v,rover):
@@ -454,9 +455,11 @@ def simulate_rover(rover,planet,experiment,end_event):
     alpha_deg = experiment['alpha_deg']
     y0 = experiment['initial_conditions']
     tspan = experiment['time_range']
+    events = end_of_mission_event(end_event)
     
-    fun=lambda t,y: rover_dynamics(t,y,rover,planet,experiment)
-    sol=solve_ivp(fun,tspan,y0,method='RK45')
+    
+    fun=lambda t,y: rover_dynamics(float(t),y,rover,planet,experiment)
+    sol=solve_ivp(fun,tspan,y0,method='RK45',events=events)
     
     T=sol.t
     Y0=sol.y[0,:]
@@ -503,10 +506,11 @@ def end_of_mission_event(end_event):
 rover,planet = define_rover_1()
 experiment,end_event = experiment1()
 v=np.linspace(.1,.3,6)
-t=np.linspace(0,1,6)
-#print(motorW(v,rover))
+#t=np.linspace(0,1,6)
+print(motorW(.3,rover))
 #print(mechpower(v,rover))
-
+y=np.array([0.25,500])
+print(rover_dynamics(20,y,rover,planet,experiment))
 #print(tau_dcmotor(motorW(v,rover),rover['wheel_assembly']['motor']))
 #print(battenergy(t,v,rover))
 
@@ -516,10 +520,10 @@ rover, T, Y0, Y1 = simulate_rover(rover,planet,experiment,end_event)
 fig,ax=plt.subplots(2)
 #fig.subplot_adjust(hspace=1)
 
-ax[0].set_title('Position of Spinr-Mass-Damper System')
+
 ax[0].plot(T,Y0)
 ax[0].set_ylabel('Time (s)')
-ax[0].set_ylabel('Position (m)')
+ax[0].set_ylabel('')
 
 ax[1].plot(T,Y1)
 
