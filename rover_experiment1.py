@@ -6,15 +6,20 @@ from define_experiment import *
 import matplotlib.pyplot as plt
 from subfunctions import *
 
+#redefine the max distance termination_value 
 end_event['max_distance']=1000
+#redefine the max time termination_value
 end_event['max_time']=10000
+#redefine the min_velocity termination value
 end_event['min_velocity']=0.1
 
+#update the rover dictionary to include the new telemetry information
 rover = simulate_rover(rover,planet,experiment,end_event)
 
+#store the data in the telemetry dictionary in te
 te = rover['telemetry']
 
-
+#make a subplot of position vs time, velocity vs time, and power vs time
 f = plt.figure(figsize=(8,7))
 ax=f.add_subplot(311,xlabel='Time [s]',ylabel='Position [m]')
 ax.title.set_text('Rover Position vs. Time')
